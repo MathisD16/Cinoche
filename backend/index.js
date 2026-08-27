@@ -27,7 +27,7 @@ app.get('/api/test-tmdb', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Erreur lors de la récupération des films' });
+    res.status(500).json({ error: 'Erreur récupération des films [test tout film]' });
   }
 });
 
@@ -54,6 +54,40 @@ app.get('/api/films/popular', async (req, res) => {
     res.json(filmsSimplifies);
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Erreur lors de la récupération des films' });
+    res.status(500).json({ error: 'Erreur récupération des films [popular]' });
+  }
+});
+
+/* recherche films avec mot dans url */
+
+app.get('/api/films/search', async (req, res) => {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({ error: 'Le paramètre "q" est requis' });
+  }
+
+  try {
+    const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
+      params: {
+        api_key: process.env.TMDB_API_KEY,
+        language: 'fr-FR',
+        query: q
+      }
+    });
+
+    const filmsSimplifies = response.data.results.map((film) => ({
+      id: film.id,
+      titre: film.title,
+      resume: film.overview,
+      affiche: film.poster_path ? `${TMDB_IMAGE_BASE}${film.poster_path}` : null,
+      note: film.vote_average,
+      dateSortie: film.release_date
+    }));
+
+    res.json(filmsSimplifies);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Erreur lors de la recherche' });
   }
 });
