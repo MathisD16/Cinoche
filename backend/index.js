@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const express = require('express'); // importation librairie express
@@ -14,6 +15,8 @@ function simplifierFilm(film) {
     dateSortie: film.release_date
   };
 }
+
+app.use(express.json());
 
 app.get('/', (req, res) => { // Visite route     "quand tu visites localhost:3000/ => on envoie ..."  
   res.send('Serveur Express en cours'); 
@@ -114,5 +117,151 @@ app.get('/api/films/:id', async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(404).json({ error: 'Film introuvable' });
+  }
+});
+
+
+const prisma = require('./prisma/client');
+const bcrypt = require('bcrypt');
+
+app.post('/api/auth/register', async(req,res) => {
+  const{ email , username, password } = req.body;
+
+  if (!email || !username || !password) {
+    return res.status(400).json({ error: 'Email, username et password requis'});
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({data: {email, username, password: hashedPassword}});
+
+    res.status(201).json({id: user.id, email: user.email, username: user.username});
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({error: 'Email ou username déja utilisé'});
+  }
+
+});
+
+const jwt = require('jsonwebtoken');
+
+app.post('/api/auth/login', async(req, res) => {
+  const { email, password } = req.body;
+
+  if(!email || !password) {
+    return res.status(400).json({error: 'Email et password sont requis'});
+  }
+  try {
+    const user = await prisma.user.findUnique({where: {email}});
+
+    if(!user){
+      return res.status(401).json({error: 'Identifiants invalides '});
+    }
+
+    const passwordValide = await bcrypt.compare(password, user.password);
+
+    if (!passwordValide){
+      return res.status(401).json({error: 'Identifiants invalide'})
+    }
+
+    const token = jwt.sign(
+      { userId: user.id},process.env.JWT_SECRET, {expiresIn: '7d'}
+    );
+
+    res.json({token, user: {id: user.id, email: user.email, username: user.username}});
+  } catch(error) {
+    console.error(error.message);
+    res.status(500).json({error: 'Erreur lors de la connexion'});
+  }
+});
+
+const verifierToken = require('./middleware/auth');
+
+app.post('/api/entries', verifierToken, async (req, res) => {
+  const { tmdbId, rating, review } = req.body;
+
+  if (!tmdbId) {
+    return res.status(400).json({ error: 'tmdbId est requis' });
+  }
+
+  try {
+    const entry = await prisma.entry.create({
+      data: {
+        tmdbId,
+        rating,
+        review,
+        userId: req.userId
+      }
+    });
+
+    res.status(201).json(entry);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Erreur lors de l'ajout" });
+  }
+});
+
+app.get('/api/entries', verifierToken, async (req, res) => {
+  try {
+    const entries = await prisma.entry.findMany({
+      where: { userId: req.userId },
+      orderBy: { watchedDate: 'desc' }
+    });
+
+    res.json(entries);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Erreur lors de la récupération' });
+  }
+});
+
+app.put('/api/entries/:id', verifierToken, async (req, res) => {
+  const { id } = req.params;
+  const { rating, review } = req.body;
+
+  try {
+    const entry = await prisma.entry.findUnique({ where: { id: parseInt(id) } });
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Entrée introuvable' });
+    }
+
+    if (entry.userId !== req.userId) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    const entryModifiee = await prisma.entry.update({
+      where: { id: parseInt(id) },
+      data: { rating, review }
+    });
+
+    res.json(entryModifiee);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Erreur lors de la modification' });
+  }
+});
+
+app.delete('/api/entries/:id', verifierToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const entry = await prisma.entry.findUnique({ where: { id: parseInt(id) } });
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Entrée introuvable' });
+    }
+
+    if (entry.userId !== req.userId) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    await prisma.entry.delete({ where: { id: parseInt(id) } });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Erreur lors de la suppression' });
   }
 });
