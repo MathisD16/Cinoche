@@ -5,6 +5,9 @@ const express = require('express'); // importation librairie express
 const app = express(); // on crée l'appli express 
 const PORT = 3000; // le port dédié pour le localhost
 
+const cors = require('cors');
+app.use(cors());
+
 function simplifierFilm(film) {
   return {
     id: film.id,

@@ -1,0 +1,40 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #141414;
+  color: #f5f5f5;
+  padding: 24px;
+}
+
+.films-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.film-card {
+  background: #1f1f1f;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.film-card img {
+  width: 100%;
+  display: block;
+}
+
+.film-card h3, .film-card .note {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.film-card .note {
+  padding-top: 0;
+  color: #f5c518;
+}
