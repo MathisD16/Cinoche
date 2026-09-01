@@ -265,3 +265,60 @@ app.delete('/api/entries/:id', verifierToken, async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la suppression' });
   }
 });
+
+
+app.post('/api/watchlist', verifierToken, async(req, res)=>{
+  
+  const {tmdbId} =  req.body;
+
+  if (!tmdbId) {
+    return res.status(400).json({ error: 'tmdbId requis' });
+  }
+
+  try {
+    const item = await prisma.watchlistItem.create({ data: {tmdbId, userId: req.userId}});
+
+    res.status(201).json(item);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({error: 'Déjà dans la watchlist'});
+    }
+    console.error(error.message);
+    res.status(500).json({error: "Erreur lors de l'ajout du film dans Watchlist"});
+  }
+
+});
+
+
+app.get('/api/watchlist',verifierToken, async(req,res)=>{
+  try{
+    const items = await prisma.watchlistItem.findMany({where: {userId: req.userId}, orderBy: {addedAt: 'desc'}});
+    res.json(items);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({error: 'Erreur lors de la récupération de Watchlist'});
+  }
+});
+
+app.delete('/api/watchlist/:id',verifierToken, async(req,res)=>{
+  const{ id } = req.params;
+
+  try{
+    const item = await prisma.watchlistItem.findUnique({where: {id: parseInt(id)}});
+
+    if(!item) {
+      return res.status(404).json({error: 'Introuvable'});
+    }
+    if(item.userId !== req.userId) {
+      return res.status(403).json({error: 'accès refusé'});
+    }
+
+    await prisma.watchlistItem.delete({where: {id: parseInt(id)}});
+
+    res.status(204).send();
+
+  } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ error: 'Erreur lors de la suppression d 1 élément  de Watchlist' });
+  }
+});
