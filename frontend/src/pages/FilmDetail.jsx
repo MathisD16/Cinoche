@@ -17,7 +17,7 @@ function FilmDetail() {
 
   return (
     <div className="film-detail">
-      <Link to="/">← Retour</Link>
+      <Link to="/" className="back-link">← Retour</Link>
       <div className="film-detail-content">
         {film.affiche && <img src={film.affiche} alt={film.titre} />}
         <div>
