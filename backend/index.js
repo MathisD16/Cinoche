@@ -8,11 +8,12 @@ const PORT = 3000; // le port dédié pour le localhost
 const cors = require('cors');
 app.use(cors());
 
-function simplifierFilm(film) {
+function simplifierFilm(film) { //Fonction qui récup les infos de chaque film
   return {
     id: film.id,
     titre: film.title,
     resume: film.overview,
+    // Construit l'URL complète de l'image si elle existe, sinon renvoie null
     affiche: film.poster_path ? `${TMDB_IMAGE_BASE}${film.poster_path}` : null,
     note: film.vote_average,
     dateSortie: film.release_date
@@ -33,17 +34,18 @@ app.listen(PORT, () => { // le serv "attend et écoute" les requetes sur le loca
 
 const axios = require('axios'); // ajout librairie axios Simplification envoie de requete vers un serv externe ( comme l'api tmdb )
 
-app.get('/api/test-tmdb', async (req, res) => { 
+app.get('/api/test-tmdb', async (req, res) => {  // async -> indique que la fonction gère des opérations asynchrones (qui prennent du temps, comme une requête réseau)
+
   try {
-    const response = await axios.get('https://api.themoviedb.org/3/movie/popular', { // r
+    const response = await axios.get('https://api.themoviedb.org/3/movie/popular', { // attend que tmdb reponde avant de continuer
       params: {
         api_key: process.env.TMDB_API_KEY,
         language: 'fr-FR'
       }
     });
-    res.json(response.data);
-  } catch (error) {
-    console.error(error.message);
+    res.json(response.data); // envoie données brutes au client
+  } catch (error) { // si tmdb répondre pas ou plante ou mauvaise clé 
+    console.error(error.message); // poser une erreur avec comme message et statut ->
     res.status(500).json({ error: 'Erreur récupération des films [test tout film]' });
   }
 });
@@ -59,7 +61,7 @@ app.get('/api/films/popular', async (req, res) => {
       }
     });
 
-    const filmsSimplifies = response.data.results.map(simplifierFilm);
+    const filmsSimplifies = response.data.results.map(simplifierFilm); // transforme le tableau résultats avec la fonction simplifierFilm
 
     res.json(filmsSimplifies);
   } catch (error) {
@@ -71,9 +73,9 @@ app.get('/api/films/popular', async (req, res) => {
 /* recherche films avec mot dans url */
 
 app.get('/api/films/search', async (req, res) => {
-  const { q } = req.query;
+  const { q } = req.query;// Récupère le texte après le "?q=" dans l'URL (ex: /api/films/search?q=batman)
 
-  if (!q) {
+  if (!q) { 
     return res.status(400).json({ error: 'Le paramètre "q" est requis' });
   }
 
@@ -111,7 +113,7 @@ app.get('/api/films/:id', async (req, res) => {
     const film = response.data;
 
     const filmDetail = {
-      ...simplifierFilm(film),
+      ...simplifierFilm(film), // reprend les infos de simplifierFilm et ajoute les deux infos suivantes
       duree: film.runtime,
       genres: film.genres.map((g) => g.name)
     };
@@ -124,8 +126,8 @@ app.get('/api/films/:id', async (req, res) => {
 });
 
 
-const prisma = require('./prisma/client');
-const bcrypt = require('bcrypt');
+const prisma = require('./prisma/client'); //ORM pour parler à la base de données facilement
+const bcrypt = require('bcrypt');  // Hacher (crypter) les mdp
 
 app.post('/api/auth/register', async(req,res) => {
   const{ email , username, password } = req.body;
@@ -139,7 +141,7 @@ app.post('/api/auth/register', async(req,res) => {
 
     const user = await prisma.user.create({data: {email, username, password: hashedPassword}});
 
-    res.status(201).json({id: user.id, email: user.email, username: user.username});
+    res.status(201).json({id: user.id, email: user.email, username: user.username}); // 201 = créer
   } catch (error) {
     console.error(error.message);
     res.status(400).json({error: 'Email ou username déja utilisé'});
@@ -147,7 +149,7 @@ app.post('/api/auth/register', async(req,res) => {
 
 });
 
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');//Librairie pour créer des "badges d'accès" (tokens)
 
 app.post('/api/auth/login', async(req, res) => {
   const { email, password } = req.body;
@@ -168,7 +170,7 @@ app.post('/api/auth/login', async(req, res) => {
       return res.status(401).json({error: 'Identifiants invalide'})
     }
 
-    const token = jwt.sign(
+    const token = jwt.sign( // créer un token qui dure 7 jours  ( badge valide si il s'est login)
       { userId: user.id},process.env.JWT_SECRET, {expiresIn: '7d'}
     );
 
