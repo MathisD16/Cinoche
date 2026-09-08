@@ -142,3 +142,24 @@ img {
   font-size: 13px;
   margin-bottom: 10px;
 }
+
+.logo{
+  color: #f5c518;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 30px;
+}
+
+.navbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  text-decoration: none;
+}
+
+.navbar-links{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
