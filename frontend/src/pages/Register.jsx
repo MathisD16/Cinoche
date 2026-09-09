@@ -36,13 +36,24 @@ function Register() {
     <div className="auth-form">
       <h1>Inscription</h1>
       {erreur && <p className="erreur">{erreur}</p>}
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit">S'inscrire</button>
-      </form>
-      <p>Déjà un compte ? <Link to="/login">Se connecter</Link></p>
+        <form onSubmit={handleSubmit} class="form">
+          <span class="input-span">
+            <label for="username" class="label">Nom d'utilisateur</label>
+            <input type="username" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} required
+          /></span>
+          <span class="input-span">
+            <label for="email" class="label">Email</label>
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required 
+          /></span>
+          <span class="input-span">
+            <label for="password" class="label">Mot de passe</label>
+            <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required
+          /></span>
+          <span class="span"><a href="#">Mot de passe oublié ?</a></span>
+          <input class="submit" type="submit" value="Se connecter" />
+          <span class="span">Déjà un compte ? <Link to="/login">Se connecter</Link></span>
+        </form>
+
     </div>
   );
 }

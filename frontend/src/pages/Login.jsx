@@ -38,12 +38,19 @@ function Login() {
     <div className="auth-form">
       <h1>Connexion</h1>
       {erreur && <p className="erreur">{erreur}</p>}
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit">Se connecter</button>
-      </form>
-      <p>Pas encore de compte ? <Link to="/register">S'inscrire</Link></p>
+        <form onSubmit={handleSubmit} class="form">
+          <span class="input-span">
+            <label for="email" class="label">Email</label>
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required 
+          /></span>
+          <span class="input-span">
+            <label for="password" class="label">Mot de passe</label>
+            <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required
+          /></span>
+          <span class="span"><a href="#">Mot de passe oublié ?</a></span>
+          <input class="submit" type="submit" value="Se connecter" />
+          <span class="span">Pas encore de compte ? <Link to="/register">S'inscrire</Link></span>
+        </form>
     </div>
   );
 }
